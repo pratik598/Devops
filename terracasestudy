@@ -90,8 +90,7 @@ resource "aws_instance" "web_instance_subnet1" {
   ami                    = "ami-06aa3f7caf3a30282" # Specify the Ubuntu AMI ID
   instance_type          = "t2.micro"
   subnet_id              = aws_subnet.subnet1.id
-  network_interface_ids  = [aws_network_interface.web_instance_nic_subnet1.id]
-  key_name               = "Jenkins.pem" # Replace with your key pair name
+  key_name               = "Jenkins" # Replace with your key pair name
   associate_public_ip_address = true
 
   tags = {
@@ -103,8 +102,7 @@ resource "aws_instance" "web_instance_subnet2" {
   ami                    = "ami-06aa3f7caf3a30282" # Specify the Ubuntu AMI ID
   instance_type          = "t2.micro"
   subnet_id              = aws_subnet.subnet2.id
-  network_interface_ids  = [aws_network_interface.web_instance_nic_subnet2.id]
-  key_name               = "Jenkins.pem" # Replace with your key pair name
+  key_name               = "Jenkins" # Replace with your key pair name
   associate_public_ip_address = true
 
   tags = {
