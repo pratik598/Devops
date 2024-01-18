@@ -1,0 +1,67 @@
+provider "aws" {
+  region = "us-east-1" # Change this to your desired AWS region
+}
+
+resource "aws_instance" "web_server" {
+  ami           = "ami-06aa3f7caf3a30282" # Specify the AMI ID for your desired OS
+  instance_type = "t2.micro" # Change the instance type as needed
+
+  tags = {
+    Name = "web-server-instance"
+  }
+}
+
+resource "aws_network_interface_attachment" "example" {
+  instance_id          = aws_instance.web_server.id
+  network_interface_id = aws_instance.web_server.network_interface_ids[0]
+}
+
+resource "aws_network_interface" "example" {
+  subnet_id          = "subnet-0f407e0e2fa3cd170" # Specify the subnet ID
+  security_group_ids = ["sg-006536f412544133a"]  # Specify the security group ID
+
+  depends_on = [aws_instance.web_server]
+}
+
+resource "aws_network_interface_association" "example" {
+  allocation_id         = aws_instance.web_server.network_interface_ids[0]
+  network_interface_id  = aws_network_interface.example.id
+}
+
+resource "aws_instance" "elastic_ip_association" {
+  ami           = "ami-06aa3f7caf3a30282" # Specify the AMI ID for your desired OS
+  instance_type = "t2.micro" # Change the instance type as needed
+
+  network_interface {
+    network_interface_id = aws_network_interface_association.example.id
+  }
+
+  tags = {
+    Name = "web-server-instance-with-elastic-ip"
+  }
+}
+
+resource "aws_instance" "elastic_ip_disassociation" {
+  ami           = "ami-06aa3f7caf3a30282" # Specify the AMI ID for your desired OS
+  instance_type = "t2.micro" # Change the instance type as needed
+
+  network_interface {
+    network_interface_id = aws_network_interface_association.example.id
+  }
+
+  tags = {
+    Name = "web-server-instance-without-elastic-ip"
+  }
+}
+
+resource "aws_network_interface_attachment" "disassociate_example" {
+  instance_id          = aws_instance.elastic_ip_disassociation.id
+  network_interface_id = aws_instance.elastic_ip_disassociation.network_interface_ids[0]
+}
+
+resource "aws_network_interface" "disassociate_example" {
+  subnet_id          = "subnet-0f407e0e2fa3cd170" # Specify the subnet ID
+  security_group_ids = ["sg-006536f412544133a"]  # Specify the security group ID
+
+  depends_on = [aws_instance.elastic_ip_disassociation]
+}
