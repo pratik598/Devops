@@ -1,0 +1,175 @@
+(master and slave both)
+
+sudo apt update -y
+sudo apt install docker.io -y
+
+sudo systemctl start docker
+sudo systemctl enable docker
+
+sudo curl -fsSLo /usr/share/keyrings/kubernetes-archive-keyring.gpg https://packages.cloud.google.com/apt/doc/apt-key.gpg
+
+echo "deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee /etc/apt/sources.list.d/kubernetes.list
+
+sudo apt update -y
+sudo apt install kubeadm=1.20.0-00 kubectl=1.20.0-00 kubelet=1.20.0-00 -y
+
+(Master Node )
+
+sudo su
+hostnamectl set-hostname master
+exec bash
+
+kubeadm init (this will generate the join token command which needs to be executed on the worker node)
+
+  mkdir -p $HOME/.kube
+  sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+  sudo chown $(id -u):$(id -g) $HOME/.kube/config
+
+
+
+Deploy CNI
+
+kubectl apply -f https://github.com/weaveworks/weave/releases/download/v2.8.1/weave-daemonset-k8s.yaml
+
+kubectl get nodes -w
+
+
+(Worker Node)
+
+sudo su
+hostnamectl set-hostname worker
+exec bash
+
+------------------------------------assignments yaml files----------------------------
+
+
+
+(deployment yaml script)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  labels:
+    app: nginx
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx
+        ports:
+        - containerPort: 80
+
+(service yaml script)
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-nginx-deployment
+
+spec:
+  type: NodePort
+  ports:
+    - targetPort: 80
+      port: 80
+      nodePort: 30008
+  selector:
+    app: nginx
+
+-------------------------------------------------------------------------------------------------------------
+ingress with minikube
+
+sudo apt update
+sudo apt install docker.io
+curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube_latest_amd64.deb
+sudo dpkg -i minikube_latest_amd64.deb
+sudo chmod 777 /var/run/docker.sock
+minikube start
+sudo snap install kubectl --classic
+minikube addons enable ingress
+
+kubectl create deployment nginx --image=nginx --port=80
+kubectl expose deploy nginx --type NodePort
+nano ingress.yaml
+=================
+apiVersion: networking.k8s.io/v1                                                                                                                              
+kind: Ingress                                                                                                                                                 
+metadata:                                                                                                                                                     
+ name: ingress                                                                                                                                               
+ annotations:                                                                                                                                                
+   nginx.ingress.kubernetes.io/rewrite-target: /                                                                                                             
+spec:      
+ ingressClassName: nginx  
+ rules:                                                                                                                                                      
+  - http:                                                                                                                                                     
+     paths:                                                                                                                                                  
+     - path: /nginx                                                                                                                                          
+       pathType: Prefix                                                                                                                                      
+       backend:                                                                                                                                              
+         service:                                                                                                                                            
+           name: nginx                                                                                                                                       
+           port:                                                                                                                                             
+             number: 80
+=================
+kubectl apply -f ingress.yaml
+kubectl port-forward service/ingress-nginx-controller -n ingress-nginx --address 0.0.0.0 :443
+
+open the ip address in your browser on the port that it outputs when you enter the previous command using https and not http
+
+
+
+------------------------------------------------------------------------------------------------------------------------------------------
+
+    1  sudo nano install.sh
+    2  bash install.sh
+    3  clear
+    4  sudo su
+    5  mkdir -p $HOME/.kube
+    6  sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+    7  sudo chown $(id -u):$(id -g) $HOME/.kube/config
+    8  kubectl apply -f https://github.com/weaveworks/weave/releases/download/v2.8.1/weave-daemonset-k8s.yaml
+    9  clear
+   10  kubectl get nodes -o wide
+   11  history
+   12  clear
+   13  sudo nano nginxdeployment.yml
+   14  kubectl create -f nginxdeployment.yml
+   15  kubectl get pods
+   16  kubectl get pods -o wide
+   17  curl 10.46.0.3
+   18  clear
+   19  sudo cat nginxdeployment
+   20  sudo cat nginxdeployment.yml
+   21  clear
+   22  kubectl get pods -o wide
+   23  curl  10.46.0.3
+   24  sudo nano nginxservice.yml
+   25  kubectl create -f nginxservice.yml
+   26  kubectl get svc
+   27  history
+   28  clear
+   29  ls
+   30  sudo cat nginxservice.yml
+   31  clear
+   32  ls
+   33  sudo nano nginxdeploment.yml
+   34  sudo nano nginxdeployment.yml
+   35  kubectl apply -f nginxdeployment.yml
+   36  kubectl get deploy
+   37  kubectl edit deploy
+   38  kubectl get deploy
+   39  kubectl edit deploy
+   40  kubectl get deploy
+   41  sudo nano nginxdeployment.yml
+   42  clear
+   43  kubectl get svc
+   44  kubectl edit svc
+   45  kubectl get svc
+   46  history

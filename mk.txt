@@ -1,0 +1,57 @@
+=======================================================================================================
+MINIKUBE INSTALLATION COMMANDS:
+
+sudo apt update
+sudo apt install docker.io
+curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube_latest_amd64.deb
+sudo dpkg -i minikube_latest_amd64.deb
+sudo chmod 777 /var/run/docker.sock
+minikube start
+sudo snap install kubectl --classic
+minikube addons enable ingress
+=======================================================================================================
+
+kubectl create deployment nginx --image=nginx --port=80
+kubectl expose deploy nginx --type NodePort
+nano ingress.yaml
+=================
+apiVersion: networking.k8s.io/v1                                                                                                                              
+kind: Ingress                                                                                                                                                 
+metadata:                                                                                                                                                     
+ name: ingress                                                                                                                                               
+ annotations:                                                                                                                                                
+   nginx.ingress.kubernetes.io/rewrite-target: /                                                                                                             
+spec:      
+ ingressClassName: nginx  
+ rules:                                                                                                                                                      
+  - http:                                                                                                                                                     
+     paths:                                                                                                                                                  
+     - path: /nginx                                                                                                                                          
+       pathType: Prefix                                                                                                                                      
+       backend:                                                                                                                                              
+         service:                                                                                                                                            
+           name: nginx                                                                                                                                       
+           port:                                                                                                                                             
+             number: 80
+=================
+kubectl apply -f ingress.yaml
+kubectl port-forward service/ingress-nginx-controller -n ingress-nginx --address 0.0.0.0 :443
+
+open the ip address in your browser on the port that it outputs when you enter the previous command using https and not http
+
+
+------------------------------------------------------------------------------------------------------------------------------------
+    1  apt-get update
+    2  sudo apt-get update
+    3  sudo apt install docker.io
+    4  curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube_latest_amd64.deb
+    5  sudo dpkg -i minikube_latest_amd64.deb
+    6  sudo chmod 777 /var/run/docker.sock
+    7  minikube start
+    8  sudo snap install kubectl --classic
+   10  minikube addons enable ingress
+   11  kubectl create deployment nginx --image=nginx --port=80
+   12  kubectl expose deploy nginx --type NodePort
+   13  nano ingress.yaml
+   14  kubectl apply -f ingress.yaml
+   15  kubectl port-forward service/ingress-nginx-controller -n ingress-nginx --address 0.0.0.0 :443
